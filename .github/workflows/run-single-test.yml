@@ -1,0 +1,35 @@
+name: Run single test
+
+on:
+  workflow_dispatch:
+    inputs:
+      testFile:
+        description: "Full path to test file."
+        required: true
+        default: "./src/test/container-features/featuresCLICommands.test.ts"
+      testNameRegex:
+        description: "Pattern for test name."
+        required: true
+        default: "CLI features subcommands"
+
+jobs:
+  test:
+    name: "Execute Selected Test"
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Setup Node.js
+      uses: actions/setup-node@v1
+      with:
+        node-version: '16.x'
+        registry-url: 'https://npm.pkg.github.com'
+        scope: '@microsoft'
+    - name: Install Dependencies
+      run: yarn install --frozen-lockfile
+    - name: Type-Check
+      run: yarn type-check
+    - name: Package
+      run: yarn package
+    - name: "Run ${{ github.event.inputs.testFile }} -> ${{ github.event.inputs.testNameRegex }}"
+      run: yarn test-matrix --forbid-only ${{ github.event.inputs.testFile }} -g ${{ github.event.inputs.testNameRegex }}
